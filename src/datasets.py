@@ -88,48 +88,103 @@ def _videos_root(root):
     return Path(root)
 
 
-def _parse_ucf101(root, split, train):
-    root = Path(root)
+def _is_class_dir_root(p):
+    """True if p holds >=2 subdirs and at least one directly contains a video."""
+    p = Path(p)
+    if not p.is_dir():
+        return False
+    subdirs = [d for d in p.iterdir() if d.is_dir()]
+    if len(subdirs) < 2:
+        return False
+    for d in subdirs:
+        if any(f.is_file() and f.suffix.lower() in VIDEO_EXTS for f in d.iterdir()):
+            return True
+    return False
+
+
+def _samples_from_class_root(vroot, class_to_idx):
+    samples = []
+    for c, idx in class_to_idx.items():
+        cdir = Path(vroot) / c
+        if not cdir.is_dir():
+            continue
+        for f in sorted(cdir.iterdir()):
+            if f.is_file() and f.suffix.lower() in VIDEO_EXTS:
+                samples.append((f"{c}/{f.name}", idx))
+    return samples
+
+
+def _parse_ucf101_official(root, split, train):
+    """Official UCF101 protocol: classInd.txt + trainlist/testlist. None if absent."""
     classind = _find(root, "classInd.txt")
     if classind is None:
-        raise FileNotFoundError(
-            "classInd.txt not found. Run `python scripts/setup_data.py "
-            "--dataset ucf101 --splits-only` or place the official split lists "
-            "under data/ucf101/splits/."
-        )
+        return None
     class_to_idx = {}
     for line in classind.read_text().strip().splitlines():
-        num, name = line.split()
-        class_to_idx[name] = int(num) - 1               # official is 1-based
-
+        parts = line.split()
+        if len(parts) >= 2:
+            class_to_idx[parts[1]] = int(parts[0]) - 1      # official is 1-based
     listname = f"{'trainlist' if train else 'testlist'}{split:02d}.txt"
     listfile = _find(root, listname)
     if listfile is None:
-        raise FileNotFoundError(f"{listname} not found under {root}")
-
+        return None
     samples = []
     for line in listfile.read_text().strip().splitlines():
-        rel = line.split()[0]                           # 'Class/video.avi'
+        rel = line.split()[0]                               # 'Class/video.avi'
         cls = rel.split("/")[0]
-        samples.append((rel, class_to_idx[cls]))
+        if cls in class_to_idx:
+            samples.append((rel, class_to_idx[cls]))
     return _videos_root(root), samples, len(class_to_idx)
 
 
-def _parse_folder_split(root, train, seed=42, ratio=0.7):
-    """Fallback (used for HMDB51 for now): deterministic per-class 70/30 split.
+def _find_split_dir(root, names):
+    """Locate a train/test/val dir (at root or one level down) of class subfolders."""
+    root = Path(root)
+    bases = [root]
+    if root.is_dir():
+        bases += [c for c in root.iterdir() if c.is_dir()]
+    for base in bases:
+        for n in names:
+            d = base / n
+            if _is_class_dir_root(d):
+                return d
+    return None
 
-    NOTE: not the official HMDB51 protocol -- wire the official split files here
-    before reporting final HMDB51 numbers.
+
+def _parse_presplit_folders(root, train):
+    """Dataset pre-split into train/ and test|val/ dirs of class subfolders."""
+    train_dir = _find_split_dir(root, ["train", "Train", "training"])
+    test_dir = _find_split_dir(root, ["test", "Test", "val", "Val", "validation", "testing"])
+    if train_dir is None or test_dir is None:
+        return None
+    classes = sorted(set(d.name for d in train_dir.iterdir() if d.is_dir()) |
+                     set(d.name for d in test_dir.iterdir() if d.is_dir()))
+    class_to_idx = {c: i for i, c in enumerate(classes)}
+    vroot = train_dir if train else test_dir
+    return vroot, _samples_from_class_root(vroot, class_to_idx), len(classes)
+
+
+def _parse_folder_split(root, train, seed=42, ratio=0.7):
+    """Single folder of class dirs -> deterministic per-class 70/30 split.
+
+    Used for HMDB51 and as a last-resort fallback. NOTE: not an official
+    protocol -- wire official split files before reporting final numbers.
     """
     vroot = _videos_root(root)
-    classes = sorted(d.name for d in vroot.iterdir() if d.is_dir())
+    if not _is_class_dir_root(vroot) and Path(vroot).is_dir():
+        for child in Path(vroot).iterdir():                 # class dirs one level down?
+            if _is_class_dir_root(child):
+                vroot = child
+                break
+    classes = sorted(d.name for d in Path(vroot).iterdir() if d.is_dir())
     if not classes:
         raise FileNotFoundError(f"no class folders under {vroot}")
     class_to_idx = {c: i for i, c in enumerate(classes)}
     rng = random.Random(seed)
     samples = []
     for c in classes:
-        vids = sorted(p.name for p in (vroot / c).glob("*") if p.suffix.lower() in VIDEO_EXTS)
+        vids = sorted(p.name for p in (Path(vroot) / c).glob("*")
+                      if p.suffix.lower() in VIDEO_EXTS)
         rng.shuffle(vids)
         k = int(len(vids) * ratio)
         for v in (vids[:k] if train else vids[k:]):
@@ -138,13 +193,26 @@ def _parse_folder_split(root, train, seed=42, ratio=0.7):
 
 
 def build_dataset(name, data_root, split=1, train=True):
-    """Returns (VideoClipDataset, num_classes)."""
+    """Returns (VideoClipDataset, num_classes). Robust to several on-disk layouts:
+    official UCF101 split files, a pre-split train/test folder tree, or a single
+    folder of class subdirectories.
+    """
     base = Path(data_root) / name
     if not base.exists():
-        base = Path(data_root)                          # e.g. Kaggle: data_root IS the dataset
+        base = Path(data_root)                              # Kaggle: data_root IS the dataset
 
+    result = None
     if name == "ucf101":
-        vroot, samples, n = _parse_ucf101(base, split, train)
-    else:
-        vroot, samples, n = _parse_folder_split(base, train)
+        result = _parse_ucf101_official(base, split, train)
+    if result is None:
+        result = _parse_presplit_folders(base, train)
+    if result is None:
+        result = _parse_folder_split(base, train)
+
+    vroot, samples, n = result
+    if not samples:
+        raise FileNotFoundError(
+            f"No video clips found for '{name}' under {base}. Ensure the dataset "
+            f"is added and contains class subfolders or official split files."
+        )
     return VideoClipDataset(samples, vroot, train), n
