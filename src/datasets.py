@@ -192,6 +192,34 @@ def _parse_folder_split(root, train, seed=42, ratio=0.7):
     return vroot, samples, len(classes)
 
 
+def find_data_root(input_dir="/kaggle/input"):
+    """Auto-locate a video dataset under input_dir (handy on Kaggle).
+
+    Returns the path of the first sub-directory that contains either official
+    split files (classInd.txt) or any video file. Prints a per-entry diagnostic
+    so a wrong attachment (e.g. a notebook instead of a dataset) is obvious.
+    """
+    root = Path(input_dir)
+    if not root.exists():
+        raise FileNotFoundError(f"{input_dir} does not exist")
+    chosen = None
+    print(f"Scanning {input_dir} ...")
+    for p in sorted(root.iterdir()):
+        has_split = next(iter(p.rglob("classInd.txt")), None) is not None
+        has_video = next((f for f in p.rglob("*")
+                          if f.is_file() and f.suffix.lower() in VIDEO_EXTS), None) is not None
+        print(f"  {p.name:35s}  split_files={has_split}  videos={has_video}")
+        if chosen is None and (has_split or has_video):
+            chosen = str(p)
+    if chosen is None:
+        raise FileNotFoundError(
+            f"No dataset with videos or split files under {input_dir}. "
+            "Add a UCF101 *dataset* (not a notebook) via '+ Add Input'."
+        )
+    print(f"Using DATA_ROOT = {chosen}")
+    return chosen
+
+
 def build_dataset(name, data_root, split=1, train=True):
     """Returns (VideoClipDataset, num_classes). Robust to several on-disk layouts:
     official UCF101 split files, a pre-split train/test folder tree, or a single
