@@ -88,32 +88,6 @@ def _videos_root(root):
     return Path(root)
 
 
-def _is_class_dir_root(p):
-    """True if p holds >=2 subdirs and at least one directly contains a video."""
-    p = Path(p)
-    if not p.is_dir():
-        return False
-    subdirs = [d for d in p.iterdir() if d.is_dir()]
-    if len(subdirs) < 2:
-        return False
-    for d in subdirs:
-        if any(f.is_file() and f.suffix.lower() in VIDEO_EXTS for f in d.iterdir()):
-            return True
-    return False
-
-
-def _samples_from_class_root(vroot, class_to_idx):
-    samples = []
-    for c, idx in class_to_idx.items():
-        cdir = Path(vroot) / c
-        if not cdir.is_dir():
-            continue
-        for f in sorted(cdir.iterdir()):
-            if f.is_file() and f.suffix.lower() in VIDEO_EXTS:
-                samples.append((f"{c}/{f.name}", idx))
-    return samples
-
-
 def _parse_ucf101_official(root, split, train):
     """Official UCF101 protocol: classInd.txt + trainlist/testlist. None if absent."""
     classind = _find(root, "classInd.txt")
@@ -137,93 +111,128 @@ def _parse_ucf101_official(root, split, train):
     return _videos_root(root), samples, len(class_to_idx)
 
 
-def _find_split_dir(root, names):
-    """Locate a train/test/val dir (at root or one level down) of class subfolders."""
-    root = Path(root)
-    bases = [root]
-    if root.is_dir():
-        bases += [c for c in root.iterdir() if c.is_dir()]
-    for base in bases:
-        for n in names:
-            d = base / n
-            if _is_class_dir_root(d):
-                return d
+# ------------------------------------------------- universal layout-agnostic scan
+_TRAIN_TOKENS = {"train", "training"}
+_TEST_TOKENS = {"test", "testing", "val", "valid", "validation", "eval"}
+
+
+def _scan_videos(root):
+    """Every video file anywhere under root."""
+    return [f for f in Path(root).rglob("*")
+            if f.is_file() and f.suffix.lower() in VIDEO_EXTS]
+
+
+def _split_tag(path, root):
+    """'train' / 'test' if any path component says so, else None."""
+    parts = {p.lower() for p in Path(path).relative_to(root).parts[:-1]}
+    if parts & _TEST_TOKENS:
+        return "test"
+    if parts & _TRAIN_TOKENS:
+        return "train"
     return None
 
 
-def _parse_presplit_folders(root, train):
-    """Dataset pre-split into train/ and test|val/ dirs of class subfolders."""
-    train_dir = _find_split_dir(root, ["train", "Train", "training"])
-    test_dir = _find_split_dir(root, ["test", "Test", "val", "Val", "validation", "testing"])
-    if train_dir is None or test_dir is None:
-        return None
-    classes = sorted(set(d.name for d in train_dir.iterdir() if d.is_dir()) |
-                     set(d.name for d in test_dir.iterdir() if d.is_dir()))
-    class_to_idx = {c: i for i, c in enumerate(classes)}
-    vroot = train_dir if train else test_dir
-    return vroot, _samples_from_class_root(vroot, class_to_idx), len(classes)
+def _parse_by_scan(root, train, seed=42, ratio=0.7):
+    """Layout-agnostic: find every video under root, label each by its PARENT
+    folder name (the class), and split by any train/test path component. If the
+    data isn't pre-split, fall back to a deterministic per-class 70/30 split.
 
-
-def _parse_folder_split(root, train, seed=42, ratio=0.7):
-    """Single folder of class dirs -> deterministic per-class 70/30 split.
-
-    Used for HMDB51 and as a last-resort fallback. NOTE: not an official
-    protocol -- wire official split files before reporting final numbers.
+    Handles arbitrary nesting and wrapper folders, e.g.:
+        root/train/ApplyEyeMakeup/v_x.avi
+        root/UCF-101/ApplyEyeMakeup/v_x.avi
+        root/anything/ApplyEyeMakeup/v_x.avi
     """
-    vroot = _videos_root(root)
-    if not _is_class_dir_root(vroot) and Path(vroot).is_dir():
-        for child in Path(vroot).iterdir():                 # class dirs one level down?
-            if _is_class_dir_root(child):
-                vroot = child
-                break
-    classes = sorted(d.name for d in Path(vroot).iterdir() if d.is_dir())
-    if not classes:
-        raise FileNotFoundError(f"no class folders under {vroot}")
+    root = Path(root)
+    vids = _scan_videos(root)
+    if not vids:
+        return None
+    classes = sorted({v.parent.name for v in vids})
     class_to_idx = {c: i for i, c in enumerate(classes)}
-    rng = random.Random(seed)
+
+    tags = {v: _split_tag(v, root) for v in vids}
+    pre_split = any(t == "train" for t in tags.values()) and \
+                any(t == "test" for t in tags.values())
+
     samples = []
-    for c in classes:
-        vids = sorted(p.name for p in (Path(vroot) / c).glob("*")
-                      if p.suffix.lower() in VIDEO_EXTS)
-        rng.shuffle(vids)
-        k = int(len(vids) * ratio)
-        for v in (vids[:k] if train else vids[k:]):
-            samples.append((f"{c}/{v}", class_to_idx[c]))
-    return vroot, samples, len(classes)
+    if pre_split:
+        want = "train" if train else "test"
+        for v in vids:
+            if tags[v] == want:
+                samples.append((v.relative_to(root).as_posix(), class_to_idx[v.parent.name]))
+    else:
+        rng = random.Random(seed)
+        by_class = {}
+        for v in vids:
+            by_class.setdefault(v.parent.name, []).append(v)
+        for c in classes:
+            files = sorted(by_class[c], key=lambda p: p.name)
+            rng.shuffle(files)
+            k = int(len(files) * ratio)
+            for v in (files[:k] if train else files[k:]):
+                samples.append((v.relative_to(root).as_posix(), class_to_idx[c]))
+    return root, samples, len(classes)
+
+
+def _describe_tree(root, max_lines=25):
+    """Compact tree (<=2 levels deep) for self-diagnosing error messages."""
+    root = Path(root)
+    if not root.exists():
+        return f"  {root} does not exist"
+    lines, n = [], 0
+    for p in sorted(root.rglob("*")):
+        depth = len(p.relative_to(root).parts) - 1
+        if depth > 2:
+            continue
+        lines.append("  " + "  " * depth + p.name + ("/" if p.is_dir() else ""))
+        n += 1
+        if n >= max_lines:
+            lines.append("  ...")
+            break
+    return "\n".join(lines) if lines else "  (empty)"
 
 
 def find_data_root(input_dir="/kaggle/input"):
     """Auto-locate a video dataset under input_dir (handy on Kaggle).
 
-    Returns the path of the first sub-directory that contains either official
-    split files (classInd.txt) or any video file. Prints a per-entry diagnostic
-    so a wrong attachment (e.g. a notebook instead of a dataset) is obvious.
+    Scores each immediate sub-directory and returns the best match, preferring
+    (1) official split files, (2) a 'ucf'/'hmdb' name, (3) more videos -- so a
+    stray folder that merely happens to contain a clip never wins over the real
+    dataset. Prints a per-entry diagnostic.
     """
     root = Path(input_dir)
     if not root.exists():
         raise FileNotFoundError(f"{input_dir} does not exist")
-    chosen = None
+    best = None
     print(f"Scanning {input_dir} ...")
     for p in sorted(root.iterdir()):
+        if not p.is_dir():
+            continue
         has_split = next(iter(p.rglob("classInd.txt")), None) is not None
-        has_video = next((f for f in p.rglob("*")
-                          if f.is_file() and f.suffix.lower() in VIDEO_EXTS), None) is not None
-        print(f"  {p.name:35s}  split_files={has_split}  videos={has_video}")
-        if chosen is None and (has_split or has_video):
-            chosen = str(p)
-    if chosen is None:
+        vcount = 0
+        for f in p.rglob("*"):
+            if f.is_file() and f.suffix.lower() in VIDEO_EXTS:
+                vcount += 1
+                if vcount >= 100:                           # cap for speed
+                    break
+        name_hit = any(k in p.name.lower() for k in ("ucf", "hmdb"))
+        print(f"  {p.name:35s}  split_files={has_split}  videos>={vcount}  name_match={name_hit}")
+        if has_split or vcount > 0:
+            score = (has_split, name_hit, vcount)
+            if best is None or score > best[0]:
+                best = (score, str(p))
+    if best is None:
         raise FileNotFoundError(
             f"No dataset with videos or split files under {input_dir}. "
             "Add a UCF101 *dataset* (not a notebook) via '+ Add Input'."
         )
-    print(f"Using DATA_ROOT = {chosen}")
-    return chosen
+    print(f"Using DATA_ROOT = {best[1]}")
+    return best[1]
 
 
 def build_dataset(name, data_root, split=1, train=True):
-    """Returns (VideoClipDataset, num_classes). Robust to several on-disk layouts:
-    official UCF101 split files, a pre-split train/test folder tree, or a single
-    folder of class subdirectories.
+    """Returns (VideoClipDataset, num_classes). Layout-agnostic: uses official
+    UCF101 split files when present, otherwise scans for videos and labels each
+    by its parent folder, respecting any train/test folders in the path.
     """
     base = Path(data_root) / name
     if not base.exists():
@@ -233,14 +242,12 @@ def build_dataset(name, data_root, split=1, train=True):
     if name == "ucf101":
         result = _parse_ucf101_official(base, split, train)
     if result is None:
-        result = _parse_presplit_folders(base, train)
-    if result is None:
-        result = _parse_folder_split(base, train)
+        result = _parse_by_scan(base, train)
 
-    vroot, samples, n = result
-    if not samples:
+    if not result or not result[1]:
         raise FileNotFoundError(
-            f"No video clips found for '{name}' under {base}. Ensure the dataset "
-            f"is added and contains class subfolders or official split files."
+            f"No video clips found for '{name}' under {base}.\n"
+            f"Directory structure seen (<=2 levels):\n{_describe_tree(base)}"
         )
+    vroot, samples, n = result
     return VideoClipDataset(samples, vroot, train), n
