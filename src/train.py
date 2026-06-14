@@ -50,22 +50,30 @@ def main():
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
     criterion = torch.nn.CrossEntropyLoss()
-    scaler = torch.cuda.amp.GradScaler(enabled=(device == "cuda"))
+    scaler = torch.amp.GradScaler("cuda", enabled=(device == "cuda"))
 
     log_path = RESULTS_DIR / f"{args.model}_{args.dataset}_train.csv"
+    if log_path.exists():                                   # idempotent re-runs
+        done = max(0, sum(1 for _ in open(log_path)) - 1)   # rows minus header
+        if done >= args.epochs:
+            print(f"[skip] {log_path.name} already has {done} epochs logged; skipping.")
+            return
     best = 0.0
     for epoch in range(1, args.epochs + 1):
         model.train()
         running, t0 = 0.0, time.time()
-        for clips, labels in train_ld:
+        n_batches = len(train_ld)
+        for i, (clips, labels) in enumerate(train_ld, 1):
             clips, labels = clips.to(device), labels.to(device)
             opt.zero_grad()
-            with torch.cuda.amp.autocast(enabled=(device == "cuda")):
+            with torch.amp.autocast("cuda", enabled=(device == "cuda")):
                 loss = criterion(model(clips), labels)
             scaler.scale(loss).backward()
             scaler.step(opt)
             scaler.update()
             running += loss.item() * clips.size(0)
+            if i % 50 == 0 or i == n_batches:               # visible progress
+                print(f"  epoch {epoch} | batch {i}/{n_batches} | loss={loss.item():.3f}", flush=True)
         sched.step()
 
         train_loss = running / len(train_ds)
