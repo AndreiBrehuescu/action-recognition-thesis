@@ -1,0 +1,11 @@
+# Install AFTER torch + torchvision are present for your environment:
+#   - Kaggle / Colab: torch & torchvision come preinstalled (CUDA) -> skip them.
+#   - WSL2 + ROCm:    install torch/torchvision from repo.radeon.com (see PROJECT.md), NOT PyPI.
+# Everything below is pip-installable identically on every platform:
+transformers>=4.40
+huggingface_hub
+decord
+fvcore
+scikit-learn
+pandas
+matplotlib
