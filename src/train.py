@@ -24,6 +24,25 @@ def _append_csv(path, header, row):
         w.writerow(row)
 
 
+def _safe_batch_size(model_name, requested, device):
+    """Clamp the batch size to what fits on a smaller GPU (e.g. Kaggle's ~15 GB
+    T4) at 16 frames / 224 px. Larger cards (the 24 GB local GPU) are untouched.
+    Guards against an over-large --batch-size from the notebook causing a CUDA
+    OOM -- enforced here, in code, because notebook cell values don't update via
+    git pull."""
+    if device != "cuda":
+        return requested
+    try:
+        total_gb = torch.cuda.get_device_properties(0).total_memory / 1e9
+    except Exception:
+        return requested
+    if total_gb < 18 and requested > 8:
+        print(f"[batch-cap] {model_name}: requested batch {requested} is too large "
+              f"for a {total_gb:.0f} GB GPU at 16 frames; capping to 8.", flush=True)
+        return 8
+    return requested
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, choices=["resnet50_tsn", "r2plus1d_18", "videomae"])
@@ -37,7 +56,8 @@ def main():
     args = ap.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"device={device} | model={args.model} | dataset={args.dataset}")
+    args.batch_size = _safe_batch_size(args.model, args.batch_size, device)
+    print(f"device={device} | model={args.model} | dataset={args.dataset} | batch={args.batch_size}")
 
     train_ds, num_classes = build_dataset(args.dataset, args.data_root, args.split, train=True)
     test_ds, _ = build_dataset(args.dataset, args.data_root, args.split, train=False)
