@@ -3,6 +3,7 @@
 Every clip -> (T, C, H, W) float tensor, normalized identically. Batched by the
 DataLoader into (B, T, C, H, W), which `src.models` adapts per architecture.
 """
+import os
 import random
 from pathlib import Path
 
@@ -11,6 +12,7 @@ import torch
 from torch.utils.data import Dataset
 import torchvision.transforms.functional as TF
 from torchvision.transforms import RandomCrop
+from PIL import Image
 
 import decord
 from decord import VideoReader, cpu
@@ -20,6 +22,7 @@ from .config import NUM_FRAMES, IMG_SIZE, MEAN, STD
 decord.bridge.set_bridge("torch")
 
 VIDEO_EXTS = {".avi", ".mp4", ".mkv", ".mov"}
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp"}   # extracted-frame ("RawFrames") datasets
 
 
 # ---------------------------------------------------------------- frame sampling
@@ -31,6 +34,20 @@ def _uniform_indices(total, n):
         pad = [total - 1] * (n - total)
         return list(range(total)) + pad
     return [int(round(x)) for x in np.linspace(0, total - 1, n)]
+
+
+# ---------------------------------------------------------------- frame folders
+def _load_frames_from_dir(d, n):
+    """Load n uniformly-sampled frames from a folder of images -> (T, C, H, W)."""
+    files = sorted(f for f in Path(d).iterdir()
+                   if f.is_file() and f.suffix.lower() in IMAGE_EXTS)
+    if not files:
+        raise FileNotFoundError(f"no frames in {d}")
+    frames = []
+    for j in _uniform_indices(len(files), n):
+        im = Image.open(files[j]).convert("RGB")
+        frames.append(torch.from_numpy(np.asarray(im)).permute(2, 0, 1))   # (C, H, W)
+    return torch.stack(frames).float() / 255.0          # (T, C, H, W)
 
 
 # ---------------------------------------------------------------- transforms
@@ -59,16 +76,19 @@ class VideoClipDataset(Dataset):
 
     def __getitem__(self, i):
         rel, label = self.samples[i]
-        path = str(self.videos_root / rel)
+        path = self.videos_root / rel
         try:
-            vr = VideoReader(path, ctx=cpu(0))
-            idx = _uniform_indices(len(vr), NUM_FRAMES)
-            frames = vr.get_batch(idx)                  # (T, H, W, C) uint8
-            clip = frames.permute(0, 3, 1, 2).float() / 255.0
+            if path.is_dir():                           # clip = folder of frames
+                clip = _load_frames_from_dir(path, NUM_FRAMES)
+            else:                                       # clip = video file (decord)
+                vr = VideoReader(str(path), ctx=cpu(0))
+                idx = _uniform_indices(len(vr), NUM_FRAMES)
+                frames = vr.get_batch(idx)              # (T, H, W, C) uint8
+                clip = frames.permute(0, 3, 1, 2).float() / 255.0
             return _transform(clip, self.train), label
-        except Exception as e:                          # tolerate a few corrupt files
+        except Exception as e:                          # tolerate a few corrupt clips
             if not self._warned:
-                print(f"[datasets] decode failed for {path}: {e} (using black clip)")
+                print(f"[datasets] failed to read {path}: {e} (using black clip)")
                 self._warned = True
             black = torch.zeros(NUM_FRAMES, 3, IMG_SIZE, IMG_SIZE)
             return TF.normalize(black, MEAN, STD), label
@@ -116,10 +136,26 @@ _TRAIN_TOKENS = {"train", "training"}
 _TEST_TOKENS = {"test", "testing", "val", "valid", "validation", "eval"}
 
 
-def _scan_videos(root):
-    """Every video file anywhere under root."""
-    return [f for f in Path(root).rglob("*")
-            if f.is_file() and f.suffix.lower() in VIDEO_EXTS]
+def _scan_clips(root):
+    """Every clip under root: a video FILE, or a FOLDER of extracted frames.
+
+    Prefers videos; if none are found, falls back to frame-folders (directories
+    that directly contain image files -- the "RawFrames" layout used by some
+    HMDB51/UCF101 mirrors). One pass with os.walk so it stays fast on datasets
+    with hundreds of thousands of frame files.
+    """
+    videos, frame_dirs = [], []
+    for dirpath, _dirnames, filenames in os.walk(root):
+        has_img = False
+        for fn in filenames:
+            ext = os.path.splitext(fn)[1].lower()
+            if ext in VIDEO_EXTS:
+                videos.append(Path(dirpath) / fn)
+            elif ext in IMAGE_EXTS:
+                has_img = True
+        if has_img:
+            frame_dirs.append(Path(dirpath))
+    return videos if videos else frame_dirs
 
 
 def _split_tag(path, root):
@@ -137,13 +173,14 @@ def _parse_by_scan(root, train, seed=42, ratio=0.7):
     folder name (the class), and split by any train/test path component. If the
     data isn't pre-split, fall back to a deterministic per-class 70/30 split.
 
-    Handles arbitrary nesting and wrapper folders, e.g.:
-        root/train/ApplyEyeMakeup/v_x.avi
-        root/UCF-101/ApplyEyeMakeup/v_x.avi
-        root/anything/ApplyEyeMakeup/v_x.avi
+    Works for both video files and folders-of-frames, and handles arbitrary
+    nesting / wrapper folders, e.g.:
+        root/train/ApplyEyeMakeup/v_x.avi          (video)
+        root/UCF-101/ApplyEyeMakeup/v_x.avi        (video)
+        root/HMDB51/brush_hair/clip_0001/*.jpg     (frame folder)
     """
     root = Path(root)
-    vids = _scan_videos(root)
+    vids = _scan_clips(root)
     if not vids:
         return None
     classes = sorted({v.parent.name for v in vids})
