@@ -4,6 +4,7 @@ Keeping clip sampling, resolution and normalization here (and importing them
 everywhere) is what guarantees every model sees IDENTICAL inputs -- the basis
 for a fair accuracy-vs-efficiency comparison.
 """
+import os
 from pathlib import Path
 
 # --- shared clip sampling (identical for every model => fair comparison) ---
@@ -15,7 +16,9 @@ STD = [0.229, 0.224, 0.225]
 # --- paths ---
 ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = ROOT / "data"
-RESULTS_DIR = ROOT / "results"
+# RESULTS_DIR is overridable via env so Colab can point it at Google Drive,
+# letting results (and the train.py skip-guard) persist across sessions.
+RESULTS_DIR = Path(os.environ.get("RESULTS_DIR", ROOT / "results"))
 CHECKPOINT_DIR = RESULTS_DIR / "checkpoints"
 
 # number of action classes per dataset

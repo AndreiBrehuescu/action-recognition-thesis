@@ -32,6 +32,8 @@ def main():
     ap.add_argument("--dataset", default="ucf101")
     ap.add_argument("--batch-size", type=int, default=1)
     ap.add_argument("--iters", type=int, default=30)
+    ap.add_argument("--data-root", default=None)        # accepted & ignored (synthetic input)
+    ap.add_argument("--num-workers", type=int, default=0)  # accepted & ignored
     args = ap.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
