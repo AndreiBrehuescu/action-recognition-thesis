@@ -35,11 +35,12 @@ def main():
     args = ap.parse_args()
 
     data_root = args.data_root or find_data_root(args.input_dir)
-    print(f"data_root = {data_root}\nmodels    = {args.models}\nepochs    = {args.epochs}")
+    print(f"data_root = {data_root}\nmodels    = {args.models}\nepochs    = {args.epochs}", flush=True)
 
     if not args.skip_train:
-        for m in args.models:
-            run([sys.executable, "-m", "src.train",
+        for k, m in enumerate(args.models, 1):
+            print(f"\n========== TRAIN {m}  ({k}/{len(args.models)}) ==========", flush=True)
+            run([sys.executable, "-u", "-m", "src.train",
                  "--model", m, "--dataset", args.dataset,
                  "--data-root", data_root,
                  "--epochs", str(args.epochs),
@@ -47,11 +48,12 @@ def main():
                  "--num-workers", str(args.num_workers)])
 
     for m in args.models:
-        run([sys.executable, "-m", "src.benchmark",
+        print(f"\n========== BENCHMARK {m} ==========", flush=True)
+        run([sys.executable, "-u", "-m", "src.benchmark",
              "--model", m, "--dataset", args.dataset])
 
-    run([sys.executable, "-m", "src.report", "--dataset", args.dataset])
-    print("\nrun_all complete.")
+    run([sys.executable, "-u", "-m", "src.report", "--dataset", args.dataset])
+    print("\nrun_all complete.", flush=True)
 
 
 if __name__ == "__main__":

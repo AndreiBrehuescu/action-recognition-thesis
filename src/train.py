@@ -57,15 +57,19 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args.batch_size = _safe_batch_size(args.model, args.batch_size, device)
-    print(f"device={device} | model={args.model} | dataset={args.dataset} | batch={args.batch_size}")
+    print(f"device={device} | model={args.model} | dataset={args.dataset} | batch={args.batch_size}", flush=True)
 
+    print("scanning dataset (can take ~1 min on first run)...", flush=True)
     train_ds, num_classes = build_dataset(args.dataset, args.data_root, args.split, train=True)
     test_ds, _ = build_dataset(args.dataset, args.data_root, args.split, train=False)
+    print(f"datasets ready: train={len(train_ds)} clips, test={len(test_ds)} clips, "
+          f"classes={num_classes}", flush=True)
     train_ld = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True,
                           num_workers=args.num_workers, pin_memory=True, drop_last=True)
     test_ld = DataLoader(test_ds, batch_size=args.batch_size, shuffle=False,
                          num_workers=args.num_workers, pin_memory=True)
 
+    print(f"building '{args.model}' (downloads pretrained weights on first use)...", flush=True)
     model = build_model(args.model, num_classes).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=args.epochs)
@@ -79,6 +83,7 @@ def main():
             print(f"[skip] {log_path.name} already has {done} epochs logged; skipping.")
             return
     best = 0.0
+    print(f"starting training: {args.epochs} epochs x {len(train_ld)} batches/epoch", flush=True)
     for epoch in range(1, args.epochs + 1):
         model.train()
         running, t0 = 0.0, time.time()
@@ -92,7 +97,7 @@ def main():
             scaler.step(opt)
             scaler.update()
             running += loss.item() * clips.size(0)
-            if i % 50 == 0 or i == n_batches:               # visible progress
+            if i == 1 or i % 20 == 0 or i == n_batches:     # frequent heartbeat
                 print(f"  epoch {epoch} | batch {i}/{n_batches} | loss={loss.item():.3f}", flush=True)
         sched.step()
 
@@ -100,7 +105,7 @@ def main():
         acc1, acc5 = evaluate_model(model, test_ld, device)
         dt = time.time() - t0
         print(f"epoch {epoch}/{args.epochs}  loss={train_loss:.4f}  "
-              f"top1={acc1:.2f}  top5={acc5:.2f}  ({dt:.0f}s)")
+              f"top1={acc1:.2f}  top5={acc5:.2f}  ({dt:.0f}s)", flush=True)
         _append_csv(log_path, ["epoch", "train_loss", "top1", "top5", "sec"],
                     [epoch, f"{train_loss:.4f}", f"{acc1:.2f}", f"{acc5:.2f}", f"{dt:.0f}"])
 
