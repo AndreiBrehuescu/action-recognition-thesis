@@ -46,7 +46,7 @@ def _load_frames_from_dir(d, n):
     frames = []
     for j in _uniform_indices(len(files), n):
         im = Image.open(files[j]).convert("RGB")
-        frames.append(torch.from_numpy(np.asarray(im)).permute(2, 0, 1))   # (C, H, W)
+        frames.append(torch.from_numpy(np.array(im)).permute(2, 0, 1))   # (C,H,W); np.array copies -> writable
     return torch.stack(frames).float() / 255.0          # (T, C, H, W)
 
 
