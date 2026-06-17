@@ -14,7 +14,7 @@ import sys
 
 from src.datasets import find_data_root
 
-MODELS = ["videomae", "r2plus1d_18", "resnet50_tsn"]
+MODELS = ["videomae", "r2plus1d_18", "cnn_lstm", "resnet50_tsn"]
 
 
 def run(cmd):

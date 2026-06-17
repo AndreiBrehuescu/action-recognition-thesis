@@ -28,7 +28,7 @@ def _flops_g(model, x):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True, choices=["resnet50_tsn", "r2plus1d_18", "videomae"])
+    ap.add_argument("--model", required=True, choices=["resnet50_tsn", "cnn_lstm", "r2plus1d_18", "videomae"])
     ap.add_argument("--dataset", default="ucf101")
     ap.add_argument("--batch-size", type=int, default=1)
     ap.add_argument("--iters", type=int, default=30)

@@ -15,10 +15,13 @@ import matplotlib.pyplot as plt
 
 from .config import RESULTS_DIR
 
-COLORS = {"resnet50_tsn": "#4C72B0", "r2plus1d_18": "#DD8452", "videomae": "#55A868"}
+COLORS = {"resnet50_tsn": "#4C72B0", "cnn_lstm": "#C44E52",
+          "r2plus1d_18": "#DD8452", "videomae": "#55A868"}
 LABELS = {"resnet50_tsn": "ResNet-50 TSN (2D-CNN)",
+          "cnn_lstm": "ResNet-50 + LSTM (CNN-RNN)",
           "r2plus1d_18": "R(2+1)D-18 (3D-CNN)",
           "videomae": "VideoMAE (Transformer)"}
+ORDER = ("resnet50_tsn", "cnn_lstm", "r2plus1d_18", "videomae")
 
 
 def _best_acc(results_dir, dataset):
@@ -40,7 +43,7 @@ def main():
 
     acc = _best_acc(results_dir, args.dataset)
     print("\n=== Accuracy (best top-1) ===")
-    for m in ("resnet50_tsn", "r2plus1d_18", "videomae"):
+    for m in ORDER:
         if m in acc:
             print(f"  {LABELS[m]:28s} {acc[m]:.2f}%")
 

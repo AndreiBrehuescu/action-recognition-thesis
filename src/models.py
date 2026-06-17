@@ -26,6 +26,34 @@ class ResNet50TSN(nn.Module):
         return x.view(b, t, -1).mean(dim=1)     # temporal average
 
 
+class CNNLSTM(nn.Module):
+    """CNN-RNN (LRCN, Donahue et al. 2015): per-frame ResNet-50 features fed to a
+    bidirectional LSTM over time, then classified.
+
+    Shares the SAME ResNet-50 backbone as ResNet50TSN on purpose: TSN averages the
+    per-frame features, this models their temporal order with recurrence -- so the
+    pair isolates exactly what recurrence adds over naive temporal pooling.
+    """
+
+    def __init__(self, num_classes, hidden=512, layers=1):
+        super().__init__()
+        self.backbone = torchvision.models.resnet50(
+            weights=torchvision.models.ResNet50_Weights.DEFAULT
+        )
+        feat_dim = self.backbone.fc.in_features         # 2048
+        self.backbone.fc = nn.Identity()                # -> per-frame feature vector
+        self.lstm = nn.LSTM(feat_dim, hidden, num_layers=layers,
+                            batch_first=True, bidirectional=True)
+        self.fc = nn.Linear(hidden * 2, num_classes)    # *2: bidirectional
+
+    def forward(self, x):                               # (B, T, C, H, W)
+        b, t, c, h, w = x.shape
+        feats = self.backbone(x.reshape(b * t, c, h, w))    # (B*T, 2048)
+        feats = feats.view(b, t, -1)                        # (B, T, 2048)
+        out, _ = self.lstm(feats)                           # (B, T, 2*hidden)
+        return self.fc(out.mean(dim=1))                     # temporal pool -> logits
+
+
 class R2Plus1D(nn.Module):
     """3D-CNN: R(2+1)D-18, Kinetics-400 pretrained."""
 
@@ -58,6 +86,7 @@ class VideoMAE(nn.Module):
 
 BUILDERS = {
     "resnet50_tsn": ResNet50TSN,
+    "cnn_lstm": CNNLSTM,
     "r2plus1d_18": R2Plus1D,
     "videomae": VideoMAE,
 }

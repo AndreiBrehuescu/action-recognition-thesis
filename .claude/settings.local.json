@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:rocm.docs.amd.com)",
+      "WebFetch(domain:huggingface.co)",
+      "WebFetch(domain:www.crcv.ucf.edu)",
+      "WebFetch(domain:videocardz.com)",
+      "WebFetch(domain:vosen.github.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.kunalganglani.com)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:tillcode.com)",
+      "WebFetch(domain:www.amd.com)",
+      "WebFetch(domain:mmaction2.readthedocs.io)",
+      "WebFetch(domain:gpuopen.com)",
+      "WebFetch(domain:wccftech.com)",
+      "WebFetch(domain:www.codegenes.net)",
+      "Bash(python -m py_compile src/config.py src/datasets.py src/models.py src/train.py src/evaluate.py src/benchmark.py scripts/setup_data.py)"
+    ]
+  }
+}

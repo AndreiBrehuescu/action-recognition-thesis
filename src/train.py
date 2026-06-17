@@ -45,7 +45,7 @@ def _safe_batch_size(model_name, requested, device):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True, choices=["resnet50_tsn", "r2plus1d_18", "videomae"])
+    ap.add_argument("--model", required=True, choices=["resnet50_tsn", "cnn_lstm", "r2plus1d_18", "videomae"])
     ap.add_argument("--dataset", default="ucf101")
     ap.add_argument("--split", type=int, default=1)
     ap.add_argument("--data-root", default=str(DATA_ROOT))
