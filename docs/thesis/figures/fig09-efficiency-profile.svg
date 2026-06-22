@@ -1,0 +1,176 @@
+<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="760" height="430" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="380" y="28" text-anchor="middle" font-size="18" font-weight="700" fill="#222">Inference Efficiency Profile (single clip, batch 1)</text>
+
+  <!-- ============================================================
+       LEFT PANEL: Latency (ms/clip), range 0-60
+       Plot area: x 60..340, y 60..340 (height 280px)
+       bar_h = value/60 * 280
+       bar_y = 340 - bar_h
+       bar_width = 40, centers at 110, 170, 230, 290
+       ============================================================ -->
+
+  <!-- Panel sub-title -->
+  <text x="200" y="52" text-anchor="middle" font-size="13" font-weight="600" fill="#444">Latency (ms / clip)</text>
+
+  <!-- Y-axis gridlines + tick labels -->
+  <!-- y=340 -> 0ms; y=60 -> 60ms; step=280/6 per 10ms -->
+  <!-- ticks at 0,10,20,30,40,50,60 -> y=340,293.3,246.7,200,153.3,106.7,60 -->
+  <g font-size="11" fill="#999">
+    <line x1="60" y1="340" x2="340" y2="340" stroke="#ccc"/>
+    <text x="54" y="344" text-anchor="end">0</text>
+
+    <line x1="60" y1="293" x2="340" y2="293" stroke="#eee"/>
+    <text x="54" y="297" text-anchor="end">10</text>
+
+    <line x1="60" y1="247" x2="340" y2="247" stroke="#eee"/>
+    <text x="54" y="251" text-anchor="end">20</text>
+
+    <line x1="60" y1="200" x2="340" y2="200" stroke="#eee"/>
+    <text x="54" y="204" text-anchor="end">30</text>
+
+    <line x1="60" y1="153" x2="340" y2="153" stroke="#eee"/>
+    <text x="54" y="157" text-anchor="end">40</text>
+
+    <line x1="60" y1="107" x2="340" y2="107" stroke="#eee"/>
+    <text x="54" y="111" text-anchor="end">50</text>
+
+    <line x1="60" y1="60" x2="340" y2="60" stroke="#eee"/>
+    <text x="54" y="64" text-anchor="end">60</text>
+  </g>
+
+  <!-- Y-axis left border -->
+  <line x1="60" y1="60" x2="60" y2="340" stroke="#ccc" stroke-width="1"/>
+
+  <!-- Y-axis title -->
+  <text x="20" y="200" text-anchor="middle" font-size="12" fill="#666" transform="rotate(-90 20 200)">ms / clip</text>
+
+  <!-- Bars: bar_h = value/60*280, bar_y = 340-bar_h, bar_x = center-20, width=40
+       TSN:  18.39/60*280 = 85.8,  y=340-85.8=254.2,  center=110
+       LSTM: 19.33/60*280 = 90.2,  y=340-90.2=249.8,  center=170
+       R21D: 45.29/60*280 = 211.4, y=340-211.4=128.6, center=230
+       VMAE: 51.85/60*280 = 242.0, y=340-242=98,      center=290 -->
+
+  <!-- ResNet-50 TSN -->
+  <rect x="90" y="254" width="40" height="86" fill="#4C72B0"/>
+  <text x="110" y="248" text-anchor="middle" font-size="10.5" fill="#333">18.39</text>
+  <text x="110" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">TSN</text>
+
+  <!-- ResNet-50 + LSTM -->
+  <rect x="150" y="250" width="40" height="90" fill="#C44E52"/>
+  <text x="170" y="244" text-anchor="middle" font-size="10.5" fill="#333">19.33</text>
+  <text x="170" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">+LSTM</text>
+
+  <!-- R(2+1)D-18 -->
+  <rect x="210" y="129" width="40" height="211" fill="#DD8452"/>
+  <text x="230" y="123" text-anchor="middle" font-size="10.5" fill="#333">45.29</text>
+  <text x="230" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">R(2+1)D</text>
+
+  <!-- VideoMAE -->
+  <rect x="270" y="98" width="40" height="242" fill="#55A868"/>
+  <text x="290" y="92" text-anchor="middle" font-size="10.5" fill="#333">51.85</text>
+  <text x="290" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">VideoMAE</text>
+
+  <!-- Model short-name x-axis labels (2nd line) -->
+  <text x="110" y="371" text-anchor="middle" font-size="9.5" fill="#888">2D-CNN</text>
+  <text x="170" y="371" text-anchor="middle" font-size="9.5" fill="#888">CNN-RNN</text>
+  <text x="230" y="371" text-anchor="middle" font-size="9.5" fill="#888">3D-CNN</text>
+  <text x="290" y="371" text-anchor="middle" font-size="9.5" fill="#888">Transformer</text>
+
+  <!-- ============================================================
+       DIVIDER
+       ============================================================ -->
+  <line x1="395" y1="52" x2="395" y2="390" stroke="#ddd" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- ============================================================
+       RIGHT PANEL: Peak GPU Memory (MB), range 0-650
+       Plot area: x 415..695, y 60..340 (height 280px)
+       bar_h = value/650 * 280
+       bar_y = 340 - bar_h
+       bar_width = 40, centers at 465, 525, 585, 645
+       TSN:  281/650*280 = 121.0, y=340-121=219, center=465
+       LSTM: 323/650*280 = 139.1, y=340-139.1=200.9, center=525
+       R21D: 582/650*280 = 250.7, y=340-250.7=89.3, center=585
+       VMAE: 432/650*280 = 186.1, y=340-186.1=153.9, center=645
+       ============================================================ -->
+
+  <!-- Panel sub-title -->
+  <text x="555" y="52" text-anchor="middle" font-size="13" font-weight="600" fill="#444">Peak GPU Memory (MB)</text>
+
+  <!-- Y-axis gridlines + tick labels -->
+  <!-- ticks at 0,100,200,300,400,500,600,650 -->
+  <!-- y = 340 - value/650*280 -->
+  <!-- 0->340, 100->296.9, 200->253.8, 300->210.8, 400->167.7, 500->124.6, 600->81.5, 650->60 -->
+  <g font-size="11" fill="#999">
+    <line x1="415" y1="340" x2="695" y2="340" stroke="#ccc"/>
+    <text x="409" y="344" text-anchor="end">0</text>
+
+    <line x1="415" y1="297" x2="695" y2="297" stroke="#eee"/>
+    <text x="409" y="301" text-anchor="end">100</text>
+
+    <line x1="415" y1="254" x2="695" y2="254" stroke="#eee"/>
+    <text x="409" y="258" text-anchor="end">200</text>
+
+    <line x1="415" y1="211" x2="695" y2="211" stroke="#eee"/>
+    <text x="409" y="215" text-anchor="end">300</text>
+
+    <line x1="415" y1="168" x2="695" y2="168" stroke="#eee"/>
+    <text x="409" y="172" text-anchor="end">400</text>
+
+    <line x1="415" y1="125" x2="695" y2="125" stroke="#eee"/>
+    <text x="409" y="129" text-anchor="end">500</text>
+
+    <line x1="415" y1="81" x2="695" y2="81" stroke="#eee"/>
+    <text x="409" y="85" text-anchor="end">600</text>
+
+    <line x1="415" y1="60" x2="695" y2="60" stroke="#eee"/>
+    <text x="409" y="64" text-anchor="end">650</text>
+  </g>
+
+  <!-- Y-axis left border -->
+  <line x1="415" y1="60" x2="415" y2="340" stroke="#ccc" stroke-width="1"/>
+
+  <!-- Y-axis title -->
+  <text x="378" y="200" text-anchor="middle" font-size="12" fill="#666" transform="rotate(-90 378 200)">MB</text>
+
+  <!-- Bars -->
+  <!-- ResNet-50 TSN: 281 MB, h=121.1, y=218.9 -->
+  <rect x="445" y="219" width="40" height="121" fill="#4C72B0"/>
+  <text x="465" y="213" text-anchor="middle" font-size="10.5" fill="#333">281</text>
+  <text x="465" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">TSN</text>
+
+  <!-- ResNet-50 + LSTM: 323 MB, h=139.1, y=200.9 -->
+  <rect x="505" y="201" width="40" height="139" fill="#C44E52"/>
+  <text x="525" y="195" text-anchor="middle" font-size="10.5" fill="#333">323</text>
+  <text x="525" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">+LSTM</text>
+
+  <!-- R(2+1)D-18: 582 MB, h=250.7, y=89.3 -->
+  <rect x="565" y="89" width="40" height="251" fill="#DD8452"/>
+  <text x="585" y="83" text-anchor="middle" font-size="10.5" fill="#333">582</text>
+  <text x="585" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">R(2+1)D</text>
+
+  <!-- VideoMAE: 432 MB, h=186.1, y=153.9 -->
+  <rect x="625" y="154" width="40" height="186" fill="#55A868"/>
+  <text x="645" y="148" text-anchor="middle" font-size="10.5" fill="#333">432</text>
+  <text x="645" y="358" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">VideoMAE</text>
+
+  <!-- Model sub-labels (2nd line) -->
+  <text x="465" y="371" text-anchor="middle" font-size="9.5" fill="#888">2D-CNN</text>
+  <text x="525" y="371" text-anchor="middle" font-size="9.5" fill="#888">CNN-RNN</text>
+  <text x="585" y="371" text-anchor="middle" font-size="9.5" fill="#888">3D-CNN</text>
+  <text x="645" y="371" text-anchor="middle" font-size="9.5" fill="#888">Transformer</text>
+
+  <!-- Legend -->
+  <g font-size="11" fill="#444">
+    <rect x="110" y="392" width="12" height="12" fill="#4C72B0"/>
+    <text x="126" y="403">ResNet-50 TSN</text>
+    <rect x="237" y="392" width="12" height="12" fill="#C44E52"/>
+    <text x="253" y="403">ResNet-50 + LSTM</text>
+    <rect x="376" y="392" width="12" height="12" fill="#DD8452"/>
+    <text x="392" y="403">R(2+1)D-18</text>
+    <rect x="475" y="392" width="12" height="12" fill="#55A868"/>
+    <text x="491" y="403">VideoMAE</text>
+  </g>
+</svg>

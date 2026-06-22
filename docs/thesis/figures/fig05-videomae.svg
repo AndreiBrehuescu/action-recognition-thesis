@@ -1,0 +1,93 @@
+<svg viewBox="0 0 820 430" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="820" height="430" fill="#ffffff"/>
+  <defs>
+    <marker id="arrG" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L8,4.5 L0,9 Z" fill="#55A868"/>
+    </marker>
+  </defs>
+
+  <text x="410" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="#222">VideoMAE — Vision Transformer with Masked-Autoencoder Pretraining</text>
+  <text x="410" y="47" text-anchor="middle" font-size="11.5" fill="#777">Self-attention relates any two spatiotemporal patches, regardless of how far apart in space or time</text>
+
+  <!-- ===== pretraining strip ===== -->
+  <rect x="40" y="64" width="740" height="120" rx="10" fill="#f4faf6" stroke="#bcdcc6"/>
+  <text x="58" y="84" font-size="11.5" font-weight="700" fill="#356b45">Self-supervised pretraining on Kinetics-400  (done once, reused)</text>
+
+  <!-- masked patch grid -->
+  <g>
+    <text x="118" y="104" text-anchor="middle" font-size="10" fill="#557">90% patches masked</text>
+    <!-- 6x4 grid, most gray (masked), few green (visible) -->
+    <g>
+      <rect x="70"  y="112" width="20" height="20" fill="#d7d7d7"/><rect x="92"  y="112" width="20" height="20" fill="#55A868"/><rect x="114" y="112" width="20" height="20" fill="#d7d7d7"/><rect x="136" y="112" width="20" height="20" fill="#d7d7d7"/>
+      <rect x="70"  y="134" width="20" height="20" fill="#d7d7d7"/><rect x="92"  y="134" width="20" height="20" fill="#d7d7d7"/><rect x="114" y="134" width="20" height="20" fill="#d7d7d7"/><rect x="136" y="134" width="20" height="20" fill="#55A868"/>
+      <rect x="70"  y="156" width="20" height="20" fill="#55A868"/><rect x="92"  y="156" width="20" height="20" fill="#d7d7d7"/><rect x="114" y="156" width="20" height="20" fill="#d7d7d7"/><rect x="136" y="156" width="20" height="20" fill="#d7d7d7"/>
+    </g>
+  </g>
+  <line x1="166" y1="143" x2="206" y2="143" stroke="#55A868" stroke-width="1.6" marker-end="url(#arrG)"/>
+  <rect x="212" y="118" width="96" height="50" rx="6" fill="#ffffff" stroke="#55A868"/>
+  <text x="260" y="139" text-anchor="middle" font-size="10.5" font-weight="700" fill="#356b45">Encoder</text>
+  <text x="260" y="155" text-anchor="middle" font-size="9" fill="#5a7a66">visible patches only</text>
+  <line x1="308" y1="143" x2="348" y2="143" stroke="#55A868" stroke-width="1.6" marker-end="url(#arrG)"/>
+  <rect x="354" y="118" width="96" height="50" rx="6" fill="#ffffff" stroke="#9ccbaa"/>
+  <text x="402" y="139" text-anchor="middle" font-size="10.5" font-weight="700" fill="#456">Decoder</text>
+  <text x="402" y="155" text-anchor="middle" font-size="9" fill="#789">reconstruct pixels</text>
+  <line x1="450" y1="143" x2="490" y2="143" stroke="#55A868" stroke-width="1.6" marker-end="url(#arrG)"/>
+  <g font-size="9.5" fill="#5a7a66">
+    <text x="566" y="130" text-anchor="middle">High masking forces genuine</text>
+    <text x="566" y="145" text-anchor="middle">spatiotemporal reasoning instead</text>
+    <text x="566" y="160" text-anchor="middle">of copying nearby frames.</text>
+  </g>
+  <text x="690" y="143" text-anchor="middle" font-size="22" fill="#cfe6d6">↓</text>
+  <text x="724" y="139" font-size="9.5" fill="#5a7a66">encoder</text>
+  <text x="724" y="151" font-size="9.5" fill="#5a7a66">weights kept</text>
+
+  <!-- ===== fine-tuning flow ===== -->
+  <text x="410" y="214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#444">Fine-tuning for action classification</text>
+
+  <!-- clip -->
+  <rect x="40" y="232" width="92" height="80" rx="8" fill="#f6f6f6" stroke="#bbb"/>
+  <text x="86" y="262" text-anchor="middle" font-size="11" font-weight="600" fill="#444">Input clip</text>
+  <text x="86" y="280" text-anchor="middle" font-size="9.5" fill="#777">16 frames</text>
+  <text x="86" y="294" text-anchor="middle" font-size="9.5" fill="#777">224 × 224</text>
+
+  <line x1="132" y1="272" x2="170" y2="272" stroke="#55A868" stroke-width="1.8" marker-end="url(#arrG)"/>
+
+  <!-- tubelet embed -->
+  <rect x="176" y="232" width="128" height="80" rx="8" fill="#eaf5ee" stroke="#55A868" stroke-width="2"/>
+  <text x="240" y="258" text-anchor="middle" font-size="11.5" font-weight="700" fill="#356b45">Tubelet embed</text>
+  <text x="240" y="276" text-anchor="middle" font-size="9.5" fill="#4d7560">2-frame × 16×16</text>
+  <text x="240" y="290" text-anchor="middle" font-size="9.5" fill="#4d7560">patches → tokens</text>
+  <text x="240" y="304" text-anchor="middle" font-size="9" fill="#8aa596">+ positional enc.</text>
+
+  <line x1="304" y1="272" x2="342" y2="272" stroke="#55A868" stroke-width="1.8" marker-end="url(#arrG)"/>
+
+  <!-- transformer encoder -->
+  <rect x="348" y="226" width="210" height="92" rx="8" fill="#eaf5ee" stroke="#55A868" stroke-width="2"/>
+  <text x="453" y="250" text-anchor="middle" font-size="12" font-weight="700" fill="#356b45">Transformer encoder × 12</text>
+  <text x="453" y="268" text-anchor="middle" font-size="9.5" fill="#4d7560">multi-head self-attention + MLP</text>
+  <text x="453" y="282" text-anchor="middle" font-size="9.5" fill="#4d7560">d = 768, 12 heads</text>
+  <!-- attention hint: all-to-all dots -->
+  <g fill="#55A868">
+    <circle cx="392" cy="300" r="3"/><circle cx="423" cy="300" r="3"/><circle cx="454" cy="300" r="3"/><circle cx="485" cy="300" r="3"/><circle cx="516" cy="300" r="3"/>
+  </g>
+  <g stroke="#9ccbaa" stroke-width="0.8">
+    <line x1="392" y1="300" x2="454" y2="300"/><line x1="392" y1="300" x2="516" y2="300"/><line x1="423" y1="300" x2="485" y2="300"/><line x1="454" y1="300" x2="516" y2="300"/>
+  </g>
+
+  <line x1="558" y1="272" x2="596" y2="272" stroke="#55A868" stroke-width="1.8" marker-end="url(#arrG)"/>
+
+  <!-- head -->
+  <rect x="602" y="232" width="92" height="80" rx="8" fill="#55A868"/>
+  <text x="648" y="266" text-anchor="middle" font-size="11" font-weight="700" fill="#ffffff">MLP head</text>
+  <text x="648" y="284" text-anchor="middle" font-size="9.5" fill="#dff0e5">400 → C</text>
+  <text x="648" y="298" text-anchor="middle" font-size="9" fill="#dff0e5">(re-init)</text>
+
+  <line x1="694" y1="272" x2="724" y2="272" stroke="#55A868" stroke-width="1.8" marker-end="url(#arrG)"/>
+  <text x="760" y="268" text-anchor="middle" font-size="10" font-weight="700" fill="#356b45">logits</text>
+  <text x="760" y="282" text-anchor="middle" font-size="9" fill="#5a7a66">[B, C]</text>
+
+  <!-- footer -->
+  <rect x="120" y="356" width="580" height="56" rx="8" fill="#fafafa" stroke="#e8e8e8"/>
+  <text x="410" y="377" text-anchor="middle" font-size="10.5" font-weight="600" fill="#555">Patch-token processing is cheaper than dense 3D convolution: 135 GFLOPs/clip — fewer than R(2+1)D</text>
+  <text x="410" y="395" text-anchor="middle" font-size="10" fill="#888">Best accuracy on both datasets (98.14% UCF101 · 85.48% HMDB51) at 86 M parameters</text>
+</svg>

@@ -1,0 +1,141 @@
+<svg viewBox="0 0 860 440" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="860" height="440" fill="#ffffff"/>
+
+  <text x="430" y="28" text-anchor="middle" font-size="18" font-weight="700" fill="#222">Four Paradigms for Modelling Time in Video</text>
+  <text x="430" y="48" text-anchor="middle" font-size="12" fill="#777">The single design choice that most distinguishes the families is how — or whether — they relate frames to one another</text>
+
+  <!-- ============ Panel 1: 2D-CNN ============ -->
+  <g>
+    <rect x="16" y="66" width="196" height="300" rx="10" fill="#ffffff" stroke="#4C72B0" stroke-width="2"/>
+    <rect x="16" y="66" width="196" height="40" rx="10" fill="#4C72B0"/>
+    <rect x="16" y="92" width="196" height="14" fill="#4C72B0"/>
+    <text x="114" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">2D-CNN</text>
+    <text x="114" y="100" text-anchor="middle" font-size="10" fill="#dce6f3">ResNet-50 TSN</text>
+
+    <!-- schematic: independent frames -->
+    <g>
+      <rect x="44" y="130" width="34" height="34" rx="3" fill="#dce6f3" stroke="#4C72B0"/>
+      <rect x="90" y="130" width="34" height="34" rx="3" fill="#dce6f3" stroke="#4C72B0"/>
+      <rect x="136" y="130" width="34" height="34" rx="3" fill="#dce6f3" stroke="#4C72B0"/>
+      <text x="187" y="150" font-size="13" fill="#bbb">…</text>
+      <!-- no links; down arrows to avg -->
+      <line x1="61"  y1="164" x2="61"  y2="188" stroke="#4C72B0" stroke-width="1.4"/>
+      <line x1="107" y1="164" x2="107" y2="188" stroke="#4C72B0" stroke-width="1.4"/>
+      <line x1="153" y1="164" x2="153" y2="188" stroke="#4C72B0" stroke-width="1.4"/>
+      <rect x="44" y="190" width="126" height="26" rx="5" fill="#4C72B0"/>
+      <text x="107" y="207" text-anchor="middle" font-size="10.5" font-weight="600" fill="#fff">average</text>
+    </g>
+    <text x="114" y="244" text-anchor="middle" font-size="10.5" font-weight="600" fill="#444">Frames are independent</text>
+    <text x="114" y="259" text-anchor="middle" font-size="9.5" fill="#777">order is discarded;</text>
+    <text x="114" y="272" text-anchor="middle" font-size="9.5" fill="#777">no temporal modelling</text>
+
+    <line x1="40" y1="290" x2="188" y2="290" stroke="#eee"/>
+    <text x="114" y="312" text-anchor="middle" font-size="11" fill="#555">HMDB51</text>
+    <text x="114" y="335" text-anchor="middle" font-size="20" font-weight="700" fill="#4C72B0">74.3%</text>
+    <text x="114" y="354" text-anchor="middle" font-size="9.5" fill="#999">65.8 GFLOPs · 24 M</text>
+  </g>
+
+  <!-- ============ Panel 2: CNN-RNN ============ -->
+  <g>
+    <rect x="232" y="66" width="196" height="300" rx="10" fill="#ffffff" stroke="#C44E52" stroke-width="2"/>
+    <rect x="232" y="66" width="196" height="40" rx="10" fill="#C44E52"/>
+    <rect x="232" y="92" width="196" height="14" fill="#C44E52"/>
+    <text x="330" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">CNN-RNN</text>
+    <text x="330" y="100" text-anchor="middle" font-size="10" fill="#f4dada">ResNet-50 + LSTM</text>
+
+    <!-- schematic: sequential chain -->
+    <g>
+      <rect x="258" y="130" width="30" height="34" rx="3" fill="#f0d8d9" stroke="#C44E52"/>
+      <rect x="304" y="130" width="30" height="34" rx="3" fill="#f0d8d9" stroke="#C44E52"/>
+      <rect x="350" y="130" width="30" height="34" rx="3" fill="#f0d8d9" stroke="#C44E52"/>
+      <text x="398" y="150" font-size="13" fill="#bbb">…</text>
+      <!-- sequential arrows -->
+      <line x1="288" y1="147" x2="302" y2="147" stroke="#C44E52" stroke-width="1.8"/>
+      <polygon points="302,143 309,147 302,151" fill="#C44E52"/>
+      <line x1="334" y1="147" x2="348" y2="147" stroke="#C44E52" stroke-width="1.8"/>
+      <polygon points="348,143 355,147 348,151" fill="#C44E52"/>
+      <line x1="380" y1="147" x2="392" y2="147" stroke="#C44E52" stroke-width="1.8"/>
+      <polygon points="392,143 399,147 392,151" fill="#C44E52"/>
+    </g>
+    <text x="330" y="200" text-anchor="middle" font-size="10.5" font-weight="600" fill="#444">Recurrence over time</text>
+    <text x="330" y="220" text-anchor="middle" font-size="9.5" fill="#777">hidden state passed</text>
+    <text x="330" y="233" text-anchor="middle" font-size="9.5" fill="#777">frame to frame</text>
+    <text x="330" y="260" text-anchor="middle" font-size="9.5" fill="#999">sequential — but features</text>
+    <text x="330" y="273" text-anchor="middle" font-size="9.5" fill="#999">already pooled per frame</text>
+
+    <line x1="256" y1="290" x2="404" y2="290" stroke="#eee"/>
+    <text x="330" y="312" text-anchor="middle" font-size="11" fill="#555">HMDB51</text>
+    <text x="330" y="335" text-anchor="middle" font-size="20" font-weight="700" fill="#C44E52">75.1%</text>
+    <text x="330" y="354" text-anchor="middle" font-size="9.5" fill="#999">65.8 GFLOPs · 34 M</text>
+  </g>
+
+  <!-- ============ Panel 3: 3D-CNN ============ -->
+  <g>
+    <rect x="448" y="66" width="196" height="300" rx="10" fill="#ffffff" stroke="#DD8452" stroke-width="2"/>
+    <rect x="448" y="66" width="196" height="40" rx="10" fill="#DD8452"/>
+    <rect x="448" y="92" width="196" height="14" fill="#DD8452"/>
+    <text x="546" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">3D-CNN</text>
+    <text x="546" y="100" text-anchor="middle" font-size="10" fill="#fbeee4">R(2+1)D-18</text>
+
+    <!-- schematic: spatiotemporal volume -->
+    <g>
+      <rect x="492" y="134" width="40" height="40" rx="3" fill="#fdf0e7" stroke="#DD8452"/>
+      <rect x="500" y="126" width="40" height="40" rx="3" fill="#fbe3d2" stroke="#DD8452"/>
+      <rect x="508" y="118" width="40" height="40" rx="3" fill="#f9d6bf" stroke="#DD8452"/>
+      <!-- local window box -->
+      <rect x="500" y="126" width="40" height="40" rx="3" fill="none" stroke="#cc5500" stroke-width="2" stroke-dasharray="3 2"/>
+      <text x="588" y="150" font-size="9" fill="#8a5328">local</text>
+      <text x="588" y="162" font-size="9" fill="#8a5328">window</text>
+    </g>
+    <text x="546" y="200" text-anchor="middle" font-size="10.5" font-weight="600" fill="#444">Joint space + time conv</text>
+    <text x="546" y="220" text-anchor="middle" font-size="9.5" fill="#777">learns motion directly,</text>
+    <text x="546" y="233" text-anchor="middle" font-size="9.5" fill="#777">but only within a</text>
+    <text x="546" y="246" text-anchor="middle" font-size="9.5" fill="#777">local receptive field</text>
+
+    <line x1="472" y1="290" x2="620" y2="290" stroke="#eee"/>
+    <text x="546" y="312" text-anchor="middle" font-size="11" fill="#555">HMDB51</text>
+    <text x="546" y="335" text-anchor="middle" font-size="20" font-weight="700" fill="#DD8452">79.6%</text>
+    <text x="546" y="354" text-anchor="middle" font-size="9.5" fill="#999">162.6 GFLOPs · 31 M</text>
+  </g>
+
+  <!-- ============ Panel 4: Transformer ============ -->
+  <g>
+    <rect x="664" y="66" width="196" height="300" rx="10" fill="#ffffff" stroke="#55A868" stroke-width="2"/>
+    <rect x="664" y="66" width="196" height="40" rx="10" fill="#55A868"/>
+    <rect x="664" y="92" width="196" height="14" fill="#55A868"/>
+    <text x="762" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Transformer</text>
+    <text x="762" y="100" text-anchor="middle" font-size="10" fill="#dff0e5">VideoMAE (ViT-B)</text>
+
+    <!-- schematic: all-to-all attention -->
+    <g>
+      <circle cx="700" cy="130" r="6" fill="#55A868"/>
+      <circle cx="762" cy="126" r="6" fill="#55A868"/>
+      <circle cx="824" cy="134" r="6" fill="#55A868"/>
+      <circle cx="708" cy="176" r="6" fill="#55A868"/>
+      <circle cx="772" cy="180" r="6" fill="#55A868"/>
+      <circle cx="820" cy="170" r="6" fill="#55A868"/>
+      <g stroke="#9ccbaa" stroke-width="1">
+        <line x1="700" y1="130" x2="762" y2="126"/><line x1="700" y1="130" x2="824" y2="134"/>
+        <line x1="700" y1="130" x2="772" y2="180"/><line x1="762" y1="126" x2="824" y2="134"/>
+        <line x1="762" y1="126" x2="708" y2="176"/><line x1="762" y1="126" x2="820" y2="170"/>
+        <line x1="824" y1="134" x2="708" y2="176"/><line x1="824" y1="134" x2="772" y2="180"/>
+        <line x1="708" y1="176" x2="772" y2="180"/><line x1="772" y1="180" x2="820" y2="170"/>
+        <line x1="700" y1="130" x2="820" y2="170"/>
+      </g>
+    </g>
+    <text x="762" y="208" text-anchor="middle" font-size="10.5" font-weight="600" fill="#444">Global self-attention</text>
+    <text x="762" y="228" text-anchor="middle" font-size="9.5" fill="#777">any patch relates to</text>
+    <text x="762" y="241" text-anchor="middle" font-size="9.5" fill="#777">any other across the</text>
+    <text x="762" y="254" text-anchor="middle" font-size="9.5" fill="#777">whole clip</text>
+
+    <line x1="688" y1="290" x2="836" y2="290" stroke="#eee"/>
+    <text x="762" y="312" text-anchor="middle" font-size="11" fill="#555">HMDB51</text>
+    <text x="762" y="335" text-anchor="middle" font-size="20" font-weight="700" fill="#55A868">85.5%</text>
+    <text x="762" y="354" text-anchor="middle" font-size="9.5" fill="#999">135.2 GFLOPs · 86 M</text>
+  </g>
+
+  <!-- bottom takeaway -->
+  <text x="430" y="396" text-anchor="middle" font-size="12" font-weight="700" fill="#444">Richer temporal coupling → higher accuracy on the discriminative benchmark</text>
+  <text x="430" y="414" text-anchor="middle" font-size="11" fill="#888">independent  →  sequential  →  local joint  →  global joint            (HMDB51: 74.3 → 75.1 → 79.6 → 85.5%)</text>
+  <text x="430" y="432" text-anchor="middle" font-size="9.5" fill="#aaa">Note: R(2+1)D and VideoMAE additionally benefit from Kinetics-400 video pretraining; TSN and CNN-RNN use ImageNet</text>
+</svg>

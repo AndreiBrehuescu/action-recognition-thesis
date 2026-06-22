@@ -1,0 +1,72 @@
+<svg viewBox="0 0 820 360" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="820" height="360" fill="#ffffff"/>
+  <defs>
+    <marker id="arrB" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L8,4.5 L0,9 Z" fill="#4C72B0"/>
+    </marker>
+  </defs>
+
+  <text x="410" y="28" text-anchor="middle" font-size="17" font-weight="700" fill="#222">ResNet-50 TSN — 2D-CNN Baseline</text>
+  <text x="410" y="47" text-anchor="middle" font-size="11.5" fill="#777">Each frame is classified independently; the per-frame logits are averaged (the TSN consensus)</text>
+
+  <!-- frame stack -->
+  <g>
+    <text x="92" y="78" text-anchor="middle" font-size="11.5" font-weight="600" fill="#444">16 frames</text>
+    <rect x="44" y="96"  width="86" height="52" rx="4" fill="#dce6f3" stroke="#9bb0cf"/>
+    <rect x="52" y="106" width="86" height="52" rx="4" fill="#cfddef" stroke="#9bb0cf"/>
+    <rect x="60" y="116" width="86" height="52" rx="4" fill="#bcd0e8" stroke="#9bb0cf"/>
+    <text x="103" y="147" text-anchor="middle" font-size="10" fill="#3f556e">t = 1 … 16</text>
+    <text x="103" y="186" text-anchor="middle" font-size="10" fill="#888">3 × 224 × 224</text>
+  </g>
+
+  <!-- arrow -->
+  <line x1="150" y1="130" x2="214" y2="130" stroke="#4C72B0" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <text x="182" y="120" text-anchor="middle" font-size="9.5" fill="#4C72B0">per frame</text>
+
+  <!-- shared ResNet-50 -->
+  <rect x="220" y="84" width="150" height="92" rx="8" fill="#eaf0f8" stroke="#4C72B0" stroke-width="2"/>
+  <text x="295" y="116" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2f4b73">ResNet-50</text>
+  <text x="295" y="135" text-anchor="middle" font-size="10.5" fill="#456">ImageNet-pretrained</text>
+  <text x="295" y="152" text-anchor="middle" font-size="10.5" fill="#456">backbone</text>
+  <text x="295" y="168" text-anchor="middle" font-size="9.5" fill="#888">shared weights</text>
+
+  <!-- arrow -->
+  <line x1="372" y1="130" x2="436" y2="130" stroke="#4C72B0" stroke-width="1.8" marker-end="url(#arrB)"/>
+
+  <!-- per-frame logits -->
+  <g>
+    <text x="505" y="78" text-anchor="middle" font-size="11" font-weight="600" fill="#444">per-frame logits</text>
+    <rect x="444" y="92" width="122" height="76" rx="6" fill="#f7f9fc" stroke="#c2d0e4"/>
+    <!-- mini bars -->
+    <g fill="#4C72B0">
+      <rect x="456" y="120" width="8" height="38"/>
+      <rect x="470" y="108" width="8" height="50"/>
+      <rect x="484" y="130" width="8" height="28"/>
+      <rect x="498" y="114" width="8" height="44"/>
+      <rect x="512" y="126" width="8" height="32"/>
+      <rect x="526" y="104" width="8" height="54"/>
+      <rect x="540" y="122" width="8" height="36"/>
+    </g>
+    <text x="505" y="182" text-anchor="middle" font-size="9.5" fill="#888">16 × num_classes</text>
+  </g>
+
+  <!-- arrow down to average -->
+  <line x1="505" y1="200" x2="505" y2="236" stroke="#4C72B0" stroke-width="1.8" marker-end="url(#arrB)"/>
+
+  <!-- temporal average -->
+  <rect x="372" y="244" width="266" height="58" rx="8" fill="#4C72B0"/>
+  <text x="505" y="270" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Temporal Average over t</text>
+  <text x="505" y="289" text-anchor="middle" font-size="10.5" fill="#dce6f3">mean( logits₁ … logits₁₆ )  — TSN consensus</text>
+
+  <!-- arrow to final -->
+  <line x1="372" y1="273" x2="320" y2="273" stroke="#4C72B0" stroke-width="1.8" marker-end="url(#arrB)"/>
+  <rect x="150" y="247" width="166" height="52" rx="8" fill="#ffffff" stroke="#4C72B0" stroke-width="2"/>
+  <text x="233" y="270" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2f4b73">Class logits</text>
+  <text x="233" y="288" text-anchor="middle" font-size="10.5" fill="#555">[B, num_classes]</text>
+
+  <!-- note -->
+  <text x="715" y="250" text-anchor="middle" font-size="10.5" fill="#999">No temporal</text>
+  <text x="715" y="265" text-anchor="middle" font-size="10.5" fill="#999">modelling —</text>
+  <text x="715" y="280" text-anchor="middle" font-size="10.5" fill="#999">frame order is</text>
+  <text x="715" y="295" text-anchor="middle" font-size="10.5" fill="#999">discarded</text>
+</svg>

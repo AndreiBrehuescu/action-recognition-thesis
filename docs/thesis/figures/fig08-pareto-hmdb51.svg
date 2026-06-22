@@ -1,0 +1,133 @@
+<svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="720" height="440" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="360" y="28" text-anchor="middle" font-size="18" font-weight="700" fill="#222">Accuracy vs Computational Cost (HMDB51)</text>
+  <text x="360" y="48" text-anchor="middle" font-size="12" fill="#777">Bubble area proportional to parameter count</text>
+
+  <!-- Plot area: x 90..650, y 60..360 (300px tall) -->
+
+  <!-- Y-axis gridlines and tick labels: range 70..88, 9 ticks every 2 -->
+  <!-- y = 360 - ((a-70)/18)*300 -->
+  <g font-size="11" fill="#999">
+    <line x1="90" y1="360" x2="650" y2="360" stroke="#ccc"/>
+    <text x="82" y="364" text-anchor="end">70</text>
+
+    <line x1="90" y1="327" x2="650" y2="327" stroke="#eee"/>
+    <text x="82" y="331" text-anchor="end">72</text>
+
+    <line x1="90" y1="293" x2="650" y2="293" stroke="#eee"/>
+    <text x="82" y="297" text-anchor="end">74</text>
+
+    <line x1="90" y1="260" x2="650" y2="260" stroke="#eee"/>
+    <text x="82" y="264" text-anchor="end">76</text>
+
+    <line x1="90" y1="227" x2="650" y2="227" stroke="#eee"/>
+    <text x="82" y="231" text-anchor="end">78</text>
+
+    <line x1="90" y1="193" x2="650" y2="193" stroke="#eee"/>
+    <text x="82" y="197" text-anchor="end">80</text>
+
+    <line x1="90" y1="160" x2="650" y2="160" stroke="#eee"/>
+    <text x="82" y="164" text-anchor="end">82</text>
+
+    <line x1="90" y1="127" x2="650" y2="127" stroke="#eee"/>
+    <text x="82" y="131" text-anchor="end">84</text>
+
+    <line x1="90" y1="93" x2="650" y2="93" stroke="#eee"/>
+    <text x="82" y="97" text-anchor="end">86</text>
+
+    <line x1="90" y1="60" x2="650" y2="60" stroke="#eee"/>
+    <text x="82" y="64" text-anchor="end">88</text>
+  </g>
+
+  <!-- Y-axis title -->
+  <text x="28" y="210" text-anchor="middle" font-size="12" fill="#666" transform="rotate(-90 28 210)">HMDB51 Top-1 Accuracy (%)</text>
+
+  <!-- X-axis gridlines and tick labels: range 0..180, ticks every 30 -->
+  <!-- x = 90 + (g/180)*560 -->
+  <g font-size="11" fill="#999">
+    <line x1="90"  y1="60" x2="90"  y2="360" stroke="#ccc"/>
+    <text x="90"  y="376" text-anchor="middle">0</text>
+
+    <line x1="183" y1="60" x2="183" y2="360" stroke="#eee"/>
+    <text x="183" y="376" text-anchor="middle">30</text>
+
+    <line x1="276" y1="60" x2="276" y2="360" stroke="#eee"/>
+    <text x="276" y="376" text-anchor="middle">60</text>
+
+    <line x1="370" y1="60" x2="370" y2="360" stroke="#eee"/>
+    <text x="370" y="376" text-anchor="middle">90</text>
+
+    <line x1="463" y1="60" x2="463" y2="360" stroke="#eee"/>
+    <text x="463" y="376" text-anchor="middle">120</text>
+
+    <line x1="556" y1="60" x2="556" y2="360" stroke="#eee"/>
+    <text x="556" y="376" text-anchor="middle">150</text>
+
+    <line x1="650" y1="60" x2="650" y2="360" stroke="#eee"/>
+    <text x="650" y="376" text-anchor="middle">180</text>
+  </g>
+
+  <!-- X-axis title -->
+  <text x="370" y="398" text-anchor="middle" font-size="12" fill="#666">GFLOPs / clip</text>
+
+  <!-- TSN and LSTM share x=90+(65.75/180)*560 = 90+204.7 = 294.7
+       TSN offset to x=278, LSTM to x=311
+       TSN y = 360-((74.27-70)/18)*300 = 360-71.2 = 288.8
+       LSTM y = 360-((75.05-70)/18)*300 = 360-84.2 = 275.8
+       R(2+1)D: x=90+(162.58/180)*560=595.7, y=360-((79.63-70)/18)*300=360-160.5=199.5
+       VideoMAE: x=90+(135.17/180)*560=510.5, y=360-((85.48-70)/18)*300=360-258=102
+       Radii: TSN=10.7, LSTM=12.9, R(2+1)D=12.3, VideoMAE=20.4 -->
+
+  <!-- ResNet-50 TSN: (278, 288.8), r=10.7 -->
+  <circle cx="278" cy="289" r="10.7" fill="#4C72B0" stroke="#333" stroke-width="0.6" opacity="0.85"/>
+  <!-- ResNet-50 + LSTM: (311, 275.8), r=12.9 -->
+  <circle cx="311" cy="276" r="12.9" fill="#C44E52" stroke="#333" stroke-width="0.6" opacity="0.85"/>
+  <!-- R(2+1)D-18: (596, 199.5), r=12.3 -->
+  <circle cx="596" cy="200" r="12.3" fill="#DD8452" stroke="#333" stroke-width="0.6" opacity="0.85"/>
+  <!-- VideoMAE: (511, 102), r=20.4 -->
+  <circle cx="511" cy="102" r="20.4" fill="#55A868" stroke="#333" stroke-width="0.6" opacity="0.85"/>
+
+  <!-- Labels: ResNet-50 TSN -->
+  <text x="246" y="270" text-anchor="middle" font-size="10.5" fill="#333" font-weight="600">ResNet-50 TSN</text>
+  <text x="246" y="282" text-anchor="middle" font-size="10.5" fill="#333">(74.27%, 65.75)</text>
+
+  <!-- Labels: ResNet-50 + LSTM -->
+  <text x="315" y="250" text-anchor="start" font-size="10.5" fill="#333" font-weight="600">ResNet-50 + LSTM</text>
+  <text x="315" y="262" text-anchor="start" font-size="10.5" fill="#333">(75.05%, 65.75)</text>
+
+  <!-- Note: shared GFLOPs -->
+  <text x="226" y="310" text-anchor="middle" font-size="9.5" fill="#888" font-style="italic">TSN &amp; CNN-LSTM share ~65.75 GFLOPs</text>
+
+  <!-- Labels: R(2+1)D-18 -->
+  <text x="600" y="184" text-anchor="start" font-size="10.5" fill="#333" font-weight="600">R(2+1)D-18</text>
+  <text x="600" y="196" text-anchor="start" font-size="10.5" fill="#333">(79.63%, 162.58)</text>
+
+  <!-- Labels: VideoMAE -->
+  <text x="516" y="73" text-anchor="start" font-size="10.5" fill="#333" font-weight="600">VideoMAE</text>
+  <text x="516" y="85" text-anchor="start" font-size="10.5" fill="#333">(85.48%, 135.17)</text>
+
+  <!-- Pareto dominance annotation: dashed arrow from R(2+1)D (596,200) to VideoMAE (511,102) -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#888"/>
+    </marker>
+  </defs>
+  <line x1="583" y1="190" x2="532" y2="120" stroke="#888" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+  <text x="530" y="160" text-anchor="end" font-size="9.5" fill="#555" font-style="italic">VideoMAE: higher accuracy</text>
+  <text x="530" y="172" text-anchor="end" font-size="9.5" fill="#555" font-style="italic">AND fewer GFLOPs</text>
+  <text x="530" y="184" text-anchor="end" font-size="9.5" fill="#555" font-style="italic">(Pareto-dominant)</text>
+
+  <!-- Legend -->
+  <g font-size="11" fill="#444">
+    <circle cx="112" cy="419" r="6" fill="#4C72B0" opacity="0.85"/>
+    <text x="122" y="423">ResNet-50 TSN</text>
+    <circle cx="232" cy="419" r="6" fill="#C44E52" opacity="0.85"/>
+    <text x="242" y="423">ResNet-50 + LSTM</text>
+    <circle cx="372" cy="419" r="6" fill="#DD8452" opacity="0.85"/>
+    <text x="382" y="423">R(2+1)D-18</text>
+    <circle cx="470" cy="419" r="6" fill="#55A868" opacity="0.85"/>
+    <text x="480" y="423">VideoMAE</text>
+  </g>
+</svg>
